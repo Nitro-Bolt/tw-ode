@@ -4,7 +4,7 @@
 // By: NishiOwO
 // License: BSD-3-Clause
 
-// Repository is at https://github.com/nishiowo/tw-ode
+// Repository is at https://github.com/nishiowo/nb-ode
 
 (async function (Scratch) {
 	"use strict";
