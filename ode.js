@@ -108,14 +108,67 @@
 		}
 	}
 
-	function from_ode(ptr){
-		const buf = new Float64Array(Module.HEAPF64.buffer, ptr);
-
+	function from_ode_array(buf){
 		if(up == "+Y"){
 			return [buf[0], buf[2], buf[1], 0];
 		}else{
 			return [buf[0], buf[1], buf[2], 0];
 		}
+	}
+
+	function from_ode(ptr){
+		const buf = new Float64Array(Module.HEAPF64.buffer, ptr);
+	
+		return from_ode_array(buf);
+	}
+
+	function quaternion_to_euler(q){
+		/* w x y z */
+		const q_w = q[0];
+		const q_x = q[1];
+		const q_y = q[2];
+		const q_z = q[3];
+
+		const sinr_cosp = 2 * (q_w * q_x + q_y * q_z);
+		const cosr_cosp = 1 - 2 * (q_x * q_x + q_y * q_y);
+		const roll = Math.atan2(sinr_cosp, cosr_cosp);
+
+		const sinp = 2 * (q_w * q_y - q_z * q_x);
+		
+		let pitch;
+		if(Math.abs(sinp) >= 1){
+			pitch = Math.sign(sinp) * Math.PI / 2;
+		}else{
+			pitch = Math.asin(sinp);
+		}
+
+		const siny_cosp = 2 * (q_w * q_z + q_x * q_y);
+		const cosy_cosp = 1 - 2 * (q_y * q_y + q_z * q_z);
+		const yaw = Math.atan2(siny_cosp, cosy_cosp);
+
+		return [roll, pitch, yaw].map(x=>x / Math.PI * 180);
+	}
+
+	function euler_to_quaternion(e){
+		const e_x = e[0];
+		const e_y = e[1];
+		const e_z = e[2];
+
+		const cx = Math.cos(e_x * 0.5);
+		const sx = Math.sin(e_x * 0.5);
+
+		const cy = Math.cos(e_y * 0.5);
+		const sy = Math.sin(e_y * 0.5);
+
+		const cz = Math.cos(e_z * 0.5);
+		const sz = Math.sin(e_z * 0.5);
+
+		return [
+			cx * cy * cz + sx * sy * sz,
+			sx * cy * cz - cx * sy * sz,
+			cx * sy * cz + sx * cy * sz,
+			cx * cy * sz - sx * sy * cz
+		];
 	}
 
 	function new_mass(){
@@ -486,11 +539,6 @@
 				body: dBodyCreate(worlds[world].world)
 			};
 
-			const mass = new_mass();
-			dMassSetBoxTotal(mass, 100, 1, 1, 1);
-			dBodySetMass(bodies[key].body, mass);
-			Module._free(mass);
-
 			return key;
 		}
 
@@ -614,25 +662,19 @@
 
 		geomGetRotation(args) {
 			const geom = Scratch.Cast.toString(args.GEOM);
-			let r = [];
 
 			if(!geoms[geom]) return [];
 
-			const ptr = Module._malloc(Float64Array.BYTES_PER_ELEMENT * 4);
-			let arr = new Float64Array(4);
-
-			Module.HEAPF64.set(arr, ptr);
-
+			const ptr = Module._malloc(Module.HEAPF64.BYTES_PER_ELEMENT * 4);
+			const c = new Float64Array(Module.HEAPF64.buffer, ptr);
+			
 			dGeomGetQuaternion(geoms[geom].geom, ptr);
 
-			const c = from_ode(ptr);
-			r[0] = c[1] / Math.PI * 180;
-			r[1] = c[2] / Math.PI * 180;
-			r[2] = c[3] / Math.PI * 180;
+			let r = quaternion_to_euler(c);
 
 			Module._free(ptr);
 
-			return r;
+			return from_ode_array(r).slice(0, 3);
 		}
 
 		geomSetRotation(args) {
@@ -643,13 +685,8 @@
 			if(!geoms[geom] || rot.length != 3) return;
 
 			const ptr = Module._malloc(Float64Array.BYTES_PER_ELEMENT * 4);
-			let arr = new Float64Array(4);
-
-			const c = to_ode(rot);
-			arr[0] = 0;
-			arr[1] = c[0] / 180 * Math.PI;
-			arr[2] = c[1] / 180 * Math.PI;
-			arr[3] = c[2] / 180 * Math.PI;
+			const c = euler_to_quaternion(rot);
+			let arr = new Float64Array([c[0]].concat(to_ode(c.slice(1)).slice(0, 3)));
 
 			Module.HEAPF64.set(arr, ptr);
 
