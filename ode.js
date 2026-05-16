@@ -43,13 +43,13 @@
 	class ODE {
 		getInfo() {
 			return {
-        			id: "nishiowoOde",
-        			name: Scratch.translate("ODE"),
+				id: "nishiowoOde",
+				name: Scratch.translate("ODE"),
 				blockIconURI: blockIconURI,
 				color1: "#444444",
 				blocks: [
 					{
-            					opcode: "resetAll",
+						opcode: "resetAll",
 						blockType: Scratch.BlockType.COMMAND,
 						text: Scratch.translate(
 							"reset all"
