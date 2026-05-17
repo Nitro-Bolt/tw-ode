@@ -9,6 +9,10 @@
 (async function (Scratch) {
 	"use strict";
 
+	if (!Scratch.extensions.unsandboxed) {
+		throw new Error("ODE must be run unsandboxed");
+	}
+
 	let Module;
 	let dInitODE2, dCloseODE;
 	let dDoCollision, dWorldStep, dWorldCreate, dHashSpaceCreate, dWorldDestroy, dSpaceDestroy, dWorldSetGravity;
