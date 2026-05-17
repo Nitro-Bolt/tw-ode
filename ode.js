@@ -515,7 +515,7 @@
 						)
 					},
 					{
-						opcode: "geomSetBody",
+						opcode: "geomAssociateBody",
 						blockType: Scratch.BlockType.COMMAND,
 						text: Scratch.translate(
 							"associate body [BODY] with geometry [GEOM]"
@@ -861,7 +861,7 @@
 			return key;
 		}
 
-		geomSetBody(args) {
+		geomAssociateBody(args) {
 			const geom = Scratch.Cast.toString(args.GEOM);
 			const body = Scratch.Cast.toString(args.BODY);
 
