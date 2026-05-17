@@ -2642,12 +2642,13 @@ embedded = true;
 		}
 
 		newGeomBox(args) {
-			const c = to_ode([...Scratch.Cast.toFloat32Array(args.SIZE)].map(x=>Math.min(1, x)).concat([0]));
+			const sz = [...Scratch.Cast.toFloat32Array(args.SIZE)].map(x=>Math.max(1, x));
 			const world = Scratch.Cast.toString(args.WORLD);
 
-			if(!worlds[world] || c.length != 4) return "";
+			if(!worlds[world] || sz.length != 3) return "";
 
 			const key = new_obj_key(geoms);
+			const c = to_ode(sz.concat([0]));
 
 			geoms[key] = {
 				world: world,
