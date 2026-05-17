@@ -28,6 +28,20 @@
 	let geoms = {};
 	let bodies = {};
 	let up = "+Y";
+	const blk_array = Scratch.BlockType[Scratch.extensions.isNitroBolt ? "ARRAY" : "REPORTER"];
+	const arg_array = Scratch.ArgumentType[Scratch.extensions.isNitroBolt ? "ARRAY" : "STRING"];
+	const from_array = Scratch.extensions.isNitroBolt ? ((x)=>x) : ((x)=>JSON.stringify(x));
+	const to_f32array = Scratch.extensions.isNitroBolt ? Scratch.Cast.toFloat32Array : ((x)=>{
+		try{
+			const json = JSON.parse(x);
+
+			if(!Array.isArray(json)) return new Float32Array([]);
+
+			return json;
+		}catch{
+			return new Float32Array([]);
+		}		
+	});
 
 	/* DO NOT REMOVE THE COMMENT BELOW!!! */
 	/* EMBED ODEJS.JS HERE */
@@ -100,19 +114,21 @@
 		return ret;
 	}
 
-	function to_ode(arr){
+	function to_ode(arr, flip = false){
+		const s = flip ? -1 : 1;
 		if(up == "+Y"){
-			return [arr[0], arr[2], arr[1], arr[3]];
+			return [arr[0], arr[2] * s, arr[1], arr[3]];
 		}else{
-			return [arr[0], arr[1], arr[2], arr[3]];
+			return [arr[0], arr[1], arr[2] * s, arr[3]];
 		}
 	}
 
-	function from_ode_array(buf){
+	function from_ode_array(buf, flip = false){
+		const s = flip ? -1 : 1;
 		if(up == "+Y"){
-			return [buf[0], buf[2], buf[1], 0];
+			return [buf[0], buf[2] * s, buf[1], 0];
 		}else{
-			return [buf[0], buf[1], buf[2], 0];
+			return [buf[0], buf[1], buf[2] * s, 0];
 		}
 	}
 
@@ -281,7 +297,8 @@
 					},
 					{
 						opcode: "bodyGetPosition",
-						blockType: Scratch.BlockType.ARRAY,
+						blockType: blk_array,
+						disableMonitor: true,
 						text: Scratch.translate(
 							"get position of body [BODY]"
 						),
@@ -304,14 +321,15 @@
 								defaultValue: ""
 							},
 							POS: {
-								type: Scratch.ArgumentType.ARRAY,
-								defaultValue: [0, 0, 0]
+								type: arg_array,
+								defaultValue: from_array([0, 0, 0])
 							}
 						}
 					},
 					{
 						opcode: "bodyGetRotation",
-						blockType: Scratch.BlockType.ARRAY,
+						blockType: blk_array,
+						disableMonitor: true,
 						text: Scratch.translate(
 							"get rotation of body [BODY]"
 						),
@@ -334,14 +352,15 @@
 								defaultValue: ""
 							},
 							ROT: {
-								type: Scratch.ArgumentType.ARRAY,
-								defaultValue: [0, 0, 0]
+								type: arg_array,
+								defaultValue: from_array([0, 0, 0])
 							}
 						}
 					},
 					{
 						opcode: "bodyGetQuaternion",
-						blockType: Scratch.BlockType.ARRAY,
+						blockType: blk_array,
+						disableMonitor: true,
 						text: Scratch.translate(
 							"get quaternion of body [BODY]"
 						),
@@ -364,8 +383,8 @@
 								defaultValue: ""
 							},
 							QUAT: {
-								type: Scratch.ArgumentType.ARRAY,
-								defaultValue: [0, 0, 0, 1]
+								type: arg_array,
+								defaultValue: from_array([0, 0, 0, 1])
 							}
 						}
 					},
@@ -384,8 +403,8 @@
 						),
 						arguments: {
 							SIZE: {
-								type: Scratch.ArgumentType.ARRAY,
-								defaultValue: [1, 1, 1]
+								type: arg_array,
+								defaultValue: from_array([1, 1, 1])
 							},
 							WORLD: {
 								type: Scratch.ArgumentType.STRING,
@@ -577,18 +596,18 @@
 
 			if(!bodies[body]) return [];
 
-			const c = from_ode(dBodyGetPosition(bodies[body].body));
+			const c = from_ode(dBodyGetPosition(bodies[body].body), true);
 
-			return [c[0], c[1], c[2]];
+			return from_array([c[0], c[1], c[2]]);
 		}
 
 		bodySetPosition(args) {
 			const body = Scratch.Cast.toString(args.BODY);
-			const pos = [...Scratch.Cast.toFloat32Array(args.POS)].concat([0]);
+			const pos = [...to_f32array(args.POS)].concat([0]);
 
 			if(!bodies[body] || pos.length != 4) return "";
 
-			const c = to_ode(pos);
+			const c = to_ode(pos, true);
 
 			dBodySetPosition(bodies[body].body, c[0], c[1], c[2]);
 		}
@@ -605,12 +624,12 @@
 
 			Module._free(ptr);
 
-			return from_ode_array(r).slice(0, 3);
+			return from_array(from_ode_array(r, true).slice(0, 3));
 		}
 
 		bodySetRotation(args) {
 			const body = Scratch.Cast.toString(args.BODY);
-			const rot = [...Scratch.Cast.toFloat32Array(args.ROT)];
+			const rot = [...to_f32array(args.ROT)];
 
 			if(!bodies[body] || rot.length != 3) return;
 
@@ -630,22 +649,22 @@
 
 			if(!bodies[body]) return [];
 
-			const ptr = dBodyGetQuaternion(bodies[body].body);;
+			const ptr = dBodyGetQuaternion(bodies[body].body);
 			const c = new Float64Array(Module.HEAPF64.buffer, ptr);	
 
-			const r = from_ode_array([c[1], c[2], c[3], 0]).slice(0, 3).concat([c[0]]);
+			const r = from_ode_array([c[1], c[2], c[3], 0], true).slice(0, 3).concat([c[0]]);
 
-			return r;
+			return from_array(r);
 		}
 
 		bodySetQuaternion(args) {
 			const body = Scratch.Cast.toString(args.BODY);
-			const quat = [...Scratch.Cast.toFloat32Array(args.QUAT)];
+			const quat = [...to_f32array(args.QUAT)];
 
 			if(!bodies[body] || quat.length != 4) return;
 
 			const ptr = Module._malloc(Float64Array.BYTES_PER_ELEMENT * 4);
-			let arr = new Float64Array([quat[3]].concat(to_ode(quat.slice(0, 3).concat([0])).slice(0, 3)));
+			let arr = new Float64Array([quat[3]].concat(to_ode(quat.slice(0, 3).concat([0]), true).slice(0, 3)));
 
 			Module.HEAPF64.set(arr, ptr / Float64Array.BYTES_PER_ELEMENT);
 
@@ -655,7 +674,7 @@
 		}
 
 		newGeomBox(args) {
-			const sz = [...Scratch.Cast.toFloat32Array(args.SIZE)].map(x=>Math.max(1, x));
+			const sz = [...to_f32array(args.SIZE)].map(x=>Math.max(1, x));
 			const world = Scratch.Cast.toString(args.WORLD);
 
 			if(!worlds[world] || sz.length != 3) return "";
