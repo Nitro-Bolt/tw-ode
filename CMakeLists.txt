@@ -7,7 +7,7 @@ add_executable(odejs odejs.c)
 target_link_options(odejs PRIVATE
 	"-sWASM=1"
 	"-sSINGLE_FILE=1"
-	"-sEXPORTED_FUNCTIONS=['_malloc', '_free', '_dInitODE2', '_dCloseODE', '_dDoCollision', '_dWorldStep', '_dWorldCreate', '_dHashSpaceCreate', '_dWorldDestroy', '_dSpaceDestroy', '_dWorldSetGravity', '_dJointGroupCreate', '_dJointGroupDestroy', '_dJointGroupEmpty', '_dBodyCreate', '_dBodySetMass', '_dCreateBox', '_dCreateCapsule', '_dCreateCylinder', '_dCreateSphere', '_dCreatePlane', '_dGeomSetBody', '_dGeomGetPosition', '_dGeomSetPosition', '_dGeomGetQuaternion', '_dGeomSetQuaternion', '_dMassSetBoxTotal', '_dMassSetCapsuleTotal', '_dMassSetCylinderTotal', '_dMassSetSphereTotal']"
+	"-sEXPORTED_FUNCTIONS=['_malloc', '_free', '_dInitODE2', '_dCloseODE', '_dDoCollision', '_dWorldStep', '_dWorldCreate', '_dHashSpaceCreate', '_dWorldDestroy', '_dSpaceDestroy', '_dWorldSetGravity', '_dJointGroupCreate', '_dJointGroupDestroy', '_dJointGroupEmpty', '_dBodyCreate', '_dBodySetMass', '_dBodyGetPosition', '_dBodySetPosition', '_dBodyGetQuaternion', '_dBodySetQuaternion', '_dCreateBox', '_dCreateCapsule', '_dCreateCylinder', '_dCreateSphere', '_dCreatePlane', '_dGeomSetBody', '_dMassSetBoxTotal', '_dMassSetCapsuleTotal', '_dMassSetCylinderTotal', '_dMassSetSphereTotal']"
 	"-sEXPORTED_RUNTIME_METHODS=['cwrap', 'ccall', 'HEAPF64']"
 	"-sMODULARIZE=1"
 	"-sALLOW_TABLE_GROWTH=1"

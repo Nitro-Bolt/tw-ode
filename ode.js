@@ -17,9 +17,9 @@
 	let dInitODE2, dCloseODE;
 	let dDoCollision, dWorldStep, dWorldCreate, dHashSpaceCreate, dWorldDestroy, dSpaceDestroy, dWorldSetGravity;
 	let dJointGroupCreate, dJointGroupDestroy, dJointGroupEmpty;
-	let dBodyCreate, dBodySetMass;
+	let dBodyCreate, dBodySetMass, dBodyGetPosition, dBodySetPosition, dBodyGetQuaternion, dBodySetQuaternion;
 	let dCreateBox, dCreateCapsule, dCreateCylinder, dCreateSphere, dCreatePlane;
-	let dGeomSetBody, dGeomGetPosition, dGeomSetPosition, dGeomGetQuaternion, dGeomSetQuaternion;
+	let dGeomSetBody;
 	let dMassSetBoxTotal, dMassSetCapsuleTotal, dMassSetCylinderTotal, dMassSetSphereTotal;
 	let ode;
 	let embedded = false;
@@ -60,6 +60,10 @@
 
 	dBodyCreate = Module.cwrap("dBodyCreate", "number", ["number"]);
 	dBodySetMass = Module.cwrap("dBodySetMass", "number", ["number", "number"]);
+	dBodyGetPosition = Module.cwrap("dBodyGetPosition", "number", ["number"]);
+	dBodySetPosition = Module.cwrap("dBodySetPosition", "number", ["number", "number", "number", "number"]);
+	dBodyGetQuaternion = Module.cwrap("dBodyGetQuaternion", "number", ["number"]);
+	dBodySetQuaternion = Module.cwrap("dBodySetQuaternion", null, ["number", "number"]);
 
 	dCreateBox = Module.cwrap("dCreateBox", "number", ["number", "number", "number", "number"]);
 	dCreateCapsule = Module.cwrap("dCreateCapsule", "number", ["number", "number", "number"]);
@@ -68,10 +72,6 @@
 	dCreatePlane = Module.cwrap("dCreatePlane", "number", ["number", "number", "number", "number", "number"]);
 
 	dGeomSetBody = Module.cwrap("dGeomSetBody", null, ["number", "number"]);
-	dGeomGetPosition = Module.cwrap("dGeomGetPosition", "number", ["number"]);
-	dGeomSetPosition = Module.cwrap("dGeomSetPosition", "number", ["number", "number", "number", "number"]);
-	dGeomGetQuaternion = Module.cwrap("dGeomGetQuaternion", null, ["number", "number"]);
-	dGeomSetQuaternion = Module.cwrap("dGeomSetQuaternion", null, ["number", "number"]);
 
 	dMassSetBoxTotal = Module.cwrap("dMassSetBoxTotal", "number", ["number", "number", "number", "number", "number"]);
 	dMassSetCapsuleTotal = Module.cwrap("dMassSetCapsuleTotal", "number", ["number", "number", "number", "number", "number"]);
@@ -280,6 +280,96 @@
 						}
 					},
 					{
+						opcode: "bodyGetPosition",
+						blockType: Scratch.BlockType.ARRAY,
+						text: Scratch.translate(
+							"get position of body [BODY]"
+						),
+						arguments: {
+							BODY: {
+								type: Scratch.ArgumentType.STRING,
+								defaultValue: ""
+							}
+						}
+					},
+					{
+						opcode: "bodySetPosition",
+						blockType: Scratch.BlockType.COMMAND,
+						text: Scratch.translate(
+							"set position of body [BODY] to [POS]"
+						),
+						arguments: {
+							BODY: {
+								type: Scratch.ArgumentType.STRING,
+								defaultValue: ""
+							},
+							POS: {
+								type: Scratch.ArgumentType.ARRAY,
+								defaultValue: [0, 0, 0]
+							}
+						}
+					},
+					{
+						opcode: "bodyGetRotation",
+						blockType: Scratch.BlockType.ARRAY,
+						text: Scratch.translate(
+							"get rotation of body [BODY]"
+						),
+						arguments: {
+							BODY: {
+								type: Scratch.ArgumentType.STRING,
+								defaultValue: ""
+							}
+						}
+					},
+					{
+						opcode: "bodySetRotation",
+						blockType: Scratch.BlockType.COMMAND,
+						text: Scratch.translate(
+							"set rotation of body [BODY] to [ROT]"
+						),
+						arguments: {
+							BODY: {
+								type: Scratch.ArgumentType.STRING,
+								defaultValue: ""
+							},
+							ROT: {
+								type: Scratch.ArgumentType.ARRAY,
+								defaultValue: [0, 0, 0]
+							}
+						}
+					},
+					{
+						opcode: "bodyGetQuaternion",
+						blockType: Scratch.BlockType.ARRAY,
+						text: Scratch.translate(
+							"get quaternion of body [BODY]"
+						),
+						arguments: {
+							BODY: {
+								type: Scratch.ArgumentType.STRING,
+								defaultValue: ""
+							}
+						}
+					},
+					{
+						opcode: "bodySetQuaternion",
+						blockType: Scratch.BlockType.COMMAND,
+						text: Scratch.translate(
+							"set quaternion of body [BODY] to [QUAT]"
+						),
+						arguments: {
+							BODY: {
+								type: Scratch.ArgumentType.STRING,
+								defaultValue: ""
+							},
+							QUAT: {
+								type: Scratch.ArgumentType.ARRAY,
+								defaultValue: [0, 0, 0, 1]
+							}
+						}
+					},
+					{
 						blockType: "label",
 						text: Scratch.translate(
 							"Geometry"
@@ -412,66 +502,6 @@
 							}
 						}
 					},
-					{
-						opcode: "geomGetPosition",
-						blockType: Scratch.BlockType.ARRAY,
-						text: Scratch.translate(
-							"get position of geometry [GEOM]"
-						),
-						arguments: {
-							GEOM: {
-								type: Scratch.ArgumentType.STRING,
-								defaultValue: ""
-							}
-						}
-					},
-					{
-						opcode: "geomSetPosition",
-						blockType: Scratch.BlockType.COMMAND,
-						text: Scratch.translate(
-							"set position of geometry [GEOM] to [POS]"
-						),
-						arguments: {
-							GEOM: {
-								type: Scratch.ArgumentType.STRING,
-								defaultValue: ""
-							},
-							POS: {
-								type: Scratch.ArgumentType.ARRAY,
-								defaultValue: [0, 0, 0]
-							}
-						}
-					},
-					{
-						opcode: "geomGetRotation",
-						blockType: Scratch.BlockType.ARRAY,
-						text: Scratch.translate(
-							"get rotation of geometry [GEOM]"
-						),
-						arguments: {
-							GEOM: {
-								type: Scratch.ArgumentType.STRING,
-								defaultValue: ""
-							}
-						}
-					},
-					{
-						opcode: "geomSetRotation",
-						blockType: Scratch.BlockType.COMMAND,
-						text: Scratch.translate(
-							"set rotation of geometry [GEOM] to [ROT]"
-						),
-						arguments: {
-							GEOM: {
-								type: Scratch.ArgumentType.STRING,
-								defaultValue: ""
-							},
-							ROT: {
-								type: Scratch.ArgumentType.ARRAY,
-								defaultValue: [0, 0, 0]
-							}
-						}
-					}
 				]
 			};
 		}
@@ -540,6 +570,88 @@
 			};
 
 			return key;
+		}
+
+		bodyGetPosition(args) {
+			const body = Scratch.Cast.toString(args.BODY);
+
+			if(!bodies[body]) return [];
+
+			const c = from_ode(dBodyGetPosition(bodies[body].body));
+
+			return [c[0], c[1], c[2]];
+		}
+
+		bodySetPosition(args) {
+			const body = Scratch.Cast.toString(args.BODY);
+			const pos = [...Scratch.Cast.toFloat32Array(args.POS)].concat([0]);
+
+			if(!bodies[body] || pos.length != 4) return "";
+
+			const c = to_ode(pos);
+
+			dBodySetPosition(bodies[body].body, c[0], c[1], c[2]);
+		}
+
+		bodyGetRotation(args) {
+			const body = Scratch.Cast.toString(args.BODY);
+
+			if(!bodies[body]) return [];
+
+			const ptr = dBodyGetQuaternion(bodies[body].body);
+			const c = new Float64Array(Module.HEAPF64.buffer, ptr);
+			
+			let r = quaternion_to_euler(c);
+
+			Module._free(ptr);
+
+			return from_ode_array(r).slice(0, 3);
+		}
+
+		bodySetRotation(args) {
+			const body = Scratch.Cast.toString(args.BODY);
+			const rot = [...Scratch.Cast.toFloat32Array(args.ROT)];
+
+			if(!bodies[body] || rot.length != 3) return;
+
+			const ptr = Module._malloc(Float64Array.BYTES_PER_ELEMENT * 4);
+			const c = euler_to_quaternion(rot);
+			let arr = new Float64Array([c[0]].concat(to_ode(c.slice(1)).slice(0, 3)));
+
+			Module.HEAPF64.set(arr, ptr / Float64Array.BYTES_PER_ELEMENT);
+
+			dBodySetQuaternion(bodies[body].body, ptr);
+
+			Module._free(ptr);
+		}
+
+		bodyGetQuaternion(args) {
+			const body = Scratch.Cast.toString(args.BODY);
+
+			if(!bodies[body]) return [];
+
+			const ptr = dBodyGetQuaternion(bodies[body].body);;
+			const c = new Float64Array(Module.HEAPF64.buffer, ptr);	
+
+			const r = from_ode_array([c[1], c[2], c[3], 0]).slice(0, 3).concat([c[0]]);
+
+			return r;
+		}
+
+		bodySetQuaternion(args) {
+			const body = Scratch.Cast.toString(args.BODY);
+			const quat = [...Scratch.Cast.toFloat32Array(args.QUAT)];
+
+			if(!bodies[body] || quat.length != 4) return;
+
+			const ptr = Module._malloc(Float64Array.BYTES_PER_ELEMENT * 4);
+			let arr = new Float64Array([quat[3]].concat(to_ode(quat.slice(0, 3).concat([0])).slice(0, 3)));
+
+			Module.HEAPF64.set(arr, ptr / Float64Array.BYTES_PER_ELEMENT);
+
+			dBodySetQuaternion(bodies[body].body, ptr);
+
+			Module._free(ptr);
 		}
 
 		newGeomBox(args) {
@@ -637,64 +749,6 @@
 
 			dGeomSetBody(geoms[geom].geom, bodies[body].body);
 			geoms[geom].body = bodies[body].body;
-		}
-
-		geomGetPosition(args) {
-			const geom = Scratch.Cast.toString(args.GEOM);
-
-			if(!geoms[geom]) return [];
-
-			const c = from_ode(dGeomGetPosition(geoms[geom].geom));
-
-			return [c[0], c[1], c[2]];
-		}
-
-		geomSetPosition(args) {
-			const geom = Scratch.Cast.toString(args.GEOM);
-			const pos = [...Scratch.Cast.toFloat32Array(args.POS)].concat([0]);
-
-			if(!geoms[geom] || pos.length != 4) return "";
-
-			const c = to_ode(pos);
-
-			dGeomSetPosition(geoms[geom].geom, c[0], c[1], c[2]);
-		}
-
-		geomGetRotation(args) {
-			const geom = Scratch.Cast.toString(args.GEOM);
-
-			if(!geoms[geom]) return [];
-
-			const ptr = Module._malloc(Module.HEAPF64.BYTES_PER_ELEMENT * 4);
-			const c = new Float64Array(Module.HEAPF64.buffer, ptr);
-			
-			dGeomGetQuaternion(geoms[geom].geom, ptr);
-
-			let r = quaternion_to_euler(c);
-
-			Module._free(ptr);
-
-			return from_ode_array(r).slice(0, 3);
-		}
-
-		geomSetRotation(args) {
-			const geom = Scratch.Cast.toString(args.GEOM);
-			const rot = [...Scratch.Cast.toFloat32Array(args.ROT)];
-			let r = [];
-
-			if(!geoms[geom] || rot.length != 3) return;
-
-			const ptr = Module._malloc(Float64Array.BYTES_PER_ELEMENT * 4);
-			const c = euler_to_quaternion(rot);
-			let arr = new Float64Array([c[0]].concat(to_ode(c.slice(1)).slice(0, 3)));
-
-			Module.HEAPF64.set(arr, ptr);
-
-			dGeomSetQuaternion(geoms[geom].geom, ptr);
-
-			Module._free(ptr);
-
-			return r;
 		}
 	};
 
