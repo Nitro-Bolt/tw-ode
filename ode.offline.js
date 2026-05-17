@@ -2049,7 +2049,7 @@ embedded = true;
 		ode = ODEWASM;
 	} else {
 		ode = await Scratch.external.evalAndReturn(
-			"",
+			"https://raw.githubusercontent.com/NishiOwO/tw-ode/5af154dbf8fbee14fa235a2d250b4b2c8bc25896/odejs.js",
 			"ODEWASM"
 		);
 	}
