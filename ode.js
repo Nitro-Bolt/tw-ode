@@ -518,14 +518,14 @@
 						opcode: "geomSetBody",
 						blockType: Scratch.BlockType.COMMAND,
 						text: Scratch.translate(
-							"set body of geometry [GEOM] to [BODY]"
+							"associate body [BODY] with geometry [GEOM]"
 						),
 						arguments: {
-							GEOM: {
+							BODY: {
 								type: Scratch.ArgumentType.STRING,
 								defaultValue: ""
 							},
-							BODY: {
+							GEOM: {
 								type: Scratch.ArgumentType.STRING,
 								defaultValue: ""
 							}

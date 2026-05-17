@@ -10,8 +10,17 @@ https://github.com/user-attachments/assets/e744a8f0-e60e-4076-9d10-90763a52c94e
 
 Maybe these would be useful if you're using ODE for first time
 
-### Difference between Body and Geometry
+### Difference between body and Geometry
 
 Body is for rigid body physics (like movemenet, gravity, and etc.), and geometry is for collision.
 
 Which means if you want an object that never moves but has collision, you'd only make geometry.
+
+### How you should create an object
+
+1. Create a geometry
+2. Create a body
+3. Associate the body you created with the geometry you created
+4. (optional) Move or rotate body (or geometry)
+
+You **MUST** move or rotate after associating the body with geometry, otherwise object would not move to the position (or get rotated).
