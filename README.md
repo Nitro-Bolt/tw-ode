@@ -14,7 +14,7 @@ In ODE you have to create them separately, but in this extension `new world` wil
 
 ### Coordinate system
 
-By default this extension converts XYZ coordinates to ODE (XZY) coordinates. You can change this behavior by using `change up direction to ...` block.
+By default this extension converts `+Y = up` coordinates to ODE (`+Z = up`) coordinates. You can change this behavior by using `change up direction to ...` block.
 
 ## Things you might find useful
 
