@@ -259,6 +259,23 @@
 						}
 					},
 					{
+						opcode: "setWorldGravity",
+						blockType: Scratch.BlockType.COMMAND,
+						text: Scratch.translate(
+							"set gravity of world [WORLD] to [GRAVITY]"
+						),
+						arguments: {
+							WORLD: {
+								type: Scratch.ArgumentType.STRING,
+								defaultValue: ""
+							},
+							GRAVITY: {
+								type: arg_array,
+								defaultValue: from_array([0, -9.81, 0])
+							}
+						}
+					},
+					{
 						blockType: "label",
 						text: Scratch.translate(
 							"Body"
@@ -656,6 +673,15 @@
 			dDoCollision(worlds[world].world, worlds[world].space, worlds[world].contactGroup);
 			dWorldStep(worlds[world].world, sec);
 			dJointGroupEmpty(worlds[world].contactGroup);
+		}
+
+		setWorldGravity(args) {
+			const world = Scratch.Cast.toString(args.WORLD);
+			const gravity = to_f32array(args.GRAVITY);
+
+			if(!worlds[world]) return;
+
+			dWorldSetGravity(worlds[key].world, gravity[0], gravity[1], gravity[2]);
 		}
 
 		newBody(args) {

@@ -40,7 +40,7 @@ You **MUST** move or rotate after associating the body with geometry, otherwise 
  - [ ] Add joint stuffs
  - [ ] Add force stuffs
  - [ ] Add ray (and raycast)
- - [ ] Add gravity function
+ - [x] Add gravity function
  - [ ] Add mass stuffs
  - [ ] Add trimesh
  - [ ] Add heightfield
