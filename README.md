@@ -14,7 +14,7 @@ In ODE you have to create them separately, but in this extension `new world` wil
 
 ### Coordinate system
 
-By default this extension converts `+Y = up` coordinates to ODE (`+Z = up`) coordinates. You can change this behavior by using `change up direction to ...` block.
+By default this extension uses `+X = right, +Y = up, -Z = front`, if you want to use different coordinate system, just change gravity.
 
 ## Things you might find useful
 

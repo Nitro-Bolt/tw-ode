@@ -27,7 +27,6 @@
 	let worlds = {};
 	let geoms = {};
 	let bodies = {};
-	let up = "+Y";
 	const blk_array = Scratch.BlockType[Scratch.extensions.isNitroBolt ? "ARRAY" : "REPORTER"];
 	const arg_array = Scratch.ArgumentType[Scratch.extensions.isNitroBolt ? "ARRAY" : "STRING"];
 	const from_array = Scratch.extensions.isNitroBolt ? ((x)=>x) : ((x)=>JSON.stringify(x));
@@ -2117,28 +2116,8 @@ embedded = true;
 		return ret;
 	}
 
-	function to_ode(arr, flip = false){
-		const s = flip ? -1 : 1;
-		if(up == "+Y"){
-			return [arr[0], arr[2] * s, arr[1], arr[3]];
-		}else{
-			return [arr[0], arr[1], arr[2] * s, arr[3]];
-		}
-	}
-
-	function from_ode_array(buf, flip = false){
-		const s = flip ? -1 : 1;
-		if(up == "+Y"){
-			return [buf[0], buf[2], buf[1] * s, 0];
-		}else{
-			return [buf[0], buf[1] * s, buf[2], 0];
-		}
-	}
-
-	function from_ode(ptr, flip = false){
-		const buf = new Float64Array(Module.HEAPF64.buffer, ptr);
-	
-		return from_ode_array(buf, flip);
+	function f64_view(ptr){
+		return new Float64Array(Module.HEAPF64.buffer, ptr);
 	}
 
 	function quaternion_to_euler(q){
@@ -2648,7 +2627,7 @@ embedded = true;
 				contactGroup: dJointGroupCreate(0)
 			};
 
-			dWorldSetGravity(worlds[key].world, 0, 0, -9.81); /* same gravity as earth */
+			dWorldSetGravity(worlds[key].world, 0, -9.81, 0); /* same gravity as earth */
 
 			return key;
 		}
@@ -2698,7 +2677,7 @@ embedded = true;
 
 			if(!bodies[body]) return [];
 
-			const c = from_ode(dBodyGetPosition(bodies[body].body), true);
+			const c = f64_view(dBodyGetPosition(bodies[body].body));
 
 			return from_array([c[0], c[1], c[2]]);
 		}
@@ -2709,9 +2688,7 @@ embedded = true;
 
 			if(!bodies[body] || pos.length != 3) return "";
 
-			const c = to_ode(pos.concat([0]), true);
-
-			dBodySetPosition(bodies[body].body, c[0], c[1], c[2]);
+			dBodySetPosition(bodies[body].body, pos[0], pos[1], pos[2]);
 		}
 
 		bodyGetRotation(args) {
@@ -2720,11 +2697,11 @@ embedded = true;
 			if(!bodies[body]) return [];
 
 			const ptr = dBodyGetQuaternion(bodies[body].body);
-			const c = new Float64Array(Module.HEAPF64.buffer, ptr);
+			const c = f64_view(ptr);
 			
 			let r = quaternion_to_euler(c);
 
-			return from_array(from_ode_array(r, true).slice(0, 3));
+			return from_array(r.slice(0, 3));
 		}
 
 		bodySetRotation(args) {
@@ -2735,7 +2712,7 @@ embedded = true;
 
 			const ptr = Module._malloc(Module.HEAPF64.BYTES_PER_ELEMENT * 4);
 			const c = euler_to_quaternion(rot);
-			let arr = new Float64Array([c[0]].concat(to_ode(c.slice(1)).slice(0, 3)));
+			let arr = new Float64Array(c);
 
 			Module.HEAPF64.set(arr, ptr / Module.HEAPF64.BYTES_PER_ELEMENT);
 
@@ -2750,9 +2727,9 @@ embedded = true;
 			if(!bodies[body]) return [];
 
 			const ptr = dBodyGetQuaternion(bodies[body].body);
-			const c = new Float64Array(Module.HEAPF64.buffer, ptr);	
+			const c = f64_view(ptr);
 
-			const r = from_ode_array([c[1], c[2], c[3], 0], true).slice(0, 3).concat([c[0]]);
+			const r = [c[1], c[2], c[3], c[0]];
 
 			return from_array(r);
 		}
@@ -2764,7 +2741,7 @@ embedded = true;
 			if(!bodies[body] || quat.length != 4) return;
 
 			const ptr = Module._malloc(Module.HEAPF64.BYTES_PER_ELEMENT * 4);
-			let arr = new Float64Array([quat[3]].concat(to_ode(quat.slice(0, 3).concat([0]), true).slice(0, 3)));
+			let arr = new Float64Array([quat[3], quat[0], quat[1], quat[2]]);
 
 			Module.HEAPF64.set(arr, ptr / Module.HEAPF64.BYTES_PER_ELEMENT);
 
@@ -2780,11 +2757,10 @@ embedded = true;
 			if(!worlds[world] || sz.length != 3) return "";
 
 			const key = new_obj_key(geoms);
-			const c = to_ode(sz.concat([0]));
 
 			geoms[key] = {
 				world: world,
-				geom: dCreateBox(worlds[world].space, c[0], c[1], c[2])
+				geom: dCreateBox(worlds[world].space, sz[0], sz[1], sz[2])
 			};
 
 			return key;
@@ -2845,7 +2821,6 @@ embedded = true;
 			const b = Math.min(1, Scratch.Cast.toNumber(args.B));
 			const c = Math.min(1, Scratch.Cast.toNumber(args.C));
 			const d = Math.min(1, Scratch.Cast.toNumber(args.D));
-			const e = to_ode([a, b, c, d]);
 			const world = Scratch.Cast.toString(args.WORLD);
 
 			if(!worlds[world]) return "";
@@ -2854,7 +2829,7 @@ embedded = true;
 
 			geoms[key] = {
 				world: world,
-				geom: dCreatePlane(worlds[world].space, e[0], e[1], e[2], e[3])
+				geom: dCreatePlane(worlds[world].space, a, b, c, d)
 			};
 
 			return key;
@@ -2876,7 +2851,7 @@ embedded = true;
 
 			if(!geoms[geom]) return [];
 
-			const c = from_ode(dGeomGetPosition(geoms[geom].geom), true);
+			const c = f64_view(dGeomGetPosition(geoms[geom].geom));
 
 			return from_array([c[0], c[1], c[2]]);
 		}
@@ -2887,9 +2862,7 @@ embedded = true;
 
 			if(!geoms[geom] || pos.length != 3) return "";
 
-			const c = to_ode(pos.concat([0]), true);
-
-			dGeomSetPosition(geoms[geom].geom, c[0], c[1], c[2]);
+			dGeomSetPosition(geoms[geom].geom, pos[0], pos[1], pos[2]);
 		}
 
 		geomGetRotation(args) {
@@ -2900,13 +2873,13 @@ embedded = true;
 			const ptr = Module._malloc(Module.HEAPF64.BYTES_PER_ELEMENT * 4);
 			dGeomGetQuaternion(geoms[geom].geom, ptr);
 
-			const c = new Float64Array(Module.HEAPF64.buffer, ptr);
+			const c = f64_view(ptr);
 			
 			let r = quaternion_to_euler(c);
 
 			Module._free(ptr);
 
-			return from_array(from_ode_array(r, true).slice(0, 3));
+			return from_array([r[0], r[1], r[2]]);
 		}
 
 		geomSetRotation(args) {
@@ -2917,7 +2890,7 @@ embedded = true;
 
 			const ptr = Module._malloc(Module.HEAPF64.BYTES_PER_ELEMENT * 4);
 			const c = euler_to_quaternion(rot);
-			let arr = new Float64Array([c[0]].concat(to_ode(c.slice(1)).slice(0, 3)));
+			let arr = new Float64Array([c[0], c[1], c[2], c[3]]);
 
 			Module.HEAPF64.set(arr, ptr / Module.HEAPF64.BYTES_PER_ELEMENT);
 
@@ -2934,11 +2907,9 @@ embedded = true;
 			const ptr = Module._malloc(Module.HEAPF64.BYTES_PER_ELEMENT * 4);
 			dGeomGetQuaternion(geoms[geom].geom, ptr);
 
-			const c = new Float64Array(Module.HEAPF64.buffer, ptr);	
+			const c = f64_view(ptr);
 
-			const r = from_ode_array([c[1], c[2], c[3], 0], true).slice(0, 3).concat([c[0]]);
-
-			return from_array(r);
+			return from_array([c[1], c[2], c[3], c[0]]);
 		}
 
 		geomSetQuaternion(args) {
@@ -2948,7 +2919,7 @@ embedded = true;
 			if(!geoms[geom] || quat.length != 4) return;
 
 			const ptr = Module._malloc(Module.HEAPF64.BYTES_PER_ELEMENT * 4);
-			let arr = new Float64Array([quat[3]].concat(to_ode(quat.slice(0, 3).concat([0]), true).slice(0, 3)));
+			let arr = new Float64Array([quat[3], quat[0], quat[1], quat[2]]);
 
 			Module.HEAPF64.set(arr, ptr / Module.HEAPF64.BYTES_PER_ELEMENT);
 
