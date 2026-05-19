@@ -195,20 +195,6 @@
 						)
 					},
 					{
-						opcode: "changeUp",
-						blockType: Scratch.BlockType.COMMAND,
-						text: Scratch.translate(
-							"change up direction to [UP]"
-						),
-						arguments: {
-							UP: {
-								type: Scratch.ArgumentType.STRING,
-								defaultValue: "+Y",
-								menu: "upDirection"
-							}
-						}
-					},
-					{
 						blockType: "label",
 						text: Scratch.translate(
 							"World"
@@ -628,10 +614,6 @@
 
 			dCloseODE();
 			dInitODE2(0);
-		}
-
-		changeUp(args) {
-			up = args.UP;
 		}
 
 		newWorld() {
