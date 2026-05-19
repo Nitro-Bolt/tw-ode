@@ -17,9 +17,9 @@
 	let dInitODE2, dCloseODE;
 	let dDoCollision, dWorldStep, dWorldCreate, dHashSpaceCreate, dWorldDestroy, dSpaceDestroy, dWorldSetGravity;
 	let dJointGroupCreate, dJointGroupDestroy, dJointGroupEmpty;
-	let dBodyCreate, dBodyInitMass, dBodyGetPosition, dBodySetPosition, dBodyGetQuaternion, dBodySetQuaternion;
+	let dBodyCreate, dBodyDestroy, dBodyInitMass, dBodyGetPosition, dBodySetPosition, dBodyGetQuaternion, dBodySetQuaternion;
 	let dCreateBox, dCreateCapsule, dCreateCylinder, dCreateSphere, dCreatePlane;
-	let dGeomSetBody, dGeomGetPosition, dGeomSetPosition, dGeomGetQuaternion, dGeomSetQuaternion;
+	let dGeomDestroy, dGeomSetBody, dGeomGetPosition, dGeomSetPosition, dGeomGetQuaternion, dGeomSetQuaternion;
 	let ode;
 	let embedded = false;
 	var ODEWASM;
@@ -71,6 +71,7 @@
 	dDoCollision = Module.cwrap("dDoCollision", null, ["number", "number", "number"]);
 
 	dBodyCreate = Module.cwrap("dBodyCreate", "number", ["number"]);
+	dBodyDestroy = Module.cwrap("dBodyDestroy", null, ["number"]);
 	dBodyInitMass = Module.cwrap("dBodyInitMass", null, ["number", "number"]);
 	dBodyGetPosition = Module.cwrap("dBodyGetPosition", "number", ["number"]);
 	dBodySetPosition = Module.cwrap("dBodySetPosition", "number", ["number", "number", "number", "number"]);
@@ -83,6 +84,7 @@
 	dCreateSphere = Module.cwrap("dCreateSphere", "number", ["number", "number"]);
 	dCreatePlane = Module.cwrap("dCreatePlane", "number", ["number", "number", "number", "number", "number"]);
 
+	dGeomDestroy = Module.cwrap("dGeomDestroy", null, ["number"]);
 	dGeomSetBody = Module.cwrap("dGeomSetBody", null, ["number", "number"]);
 	dGeomGetPosition = Module.cwrap("dGeomGetPosition", "number", ["number"]);
 	dGeomSetPosition = Module.cwrap("dGeomSetPosition", "number", ["number", "number", "number", "number"]);
@@ -93,7 +95,7 @@
 		let n;
 		
 		do{
-			n = "0x" + Math.floor(Math.random() * 0xffffffff).toString(16);
+			n = "0x" + Math.max(1, Math.floor(Math.random() * 0xffffffff)).toString(16);
 		}while(obj[n]);
 
 		return n;
@@ -222,7 +224,7 @@
 						}
 					},
 					{
-						opcode: "stepWorld",
+						opcode: "worldStep",
 						blockType: Scratch.BlockType.COMMAND,
 						text: Scratch.translate(
 							"run steps for [SECOND] seconds in world [WORLD]"
@@ -239,7 +241,7 @@
 						}
 					},
 					{
-						opcode: "setWorldGravity",
+						opcode: "worldSetGravity",
 						blockType: Scratch.BlockType.COMMAND,
 						text: Scratch.translate(
 							"set gravity of world [WORLD] to [GRAVITY]"
@@ -270,6 +272,19 @@
 						),
 						arguments: {
 							WORLD: {
+								type: Scratch.ArgumentType.STRING,
+								defaultValue: ""
+							}
+						}
+					},
+					{
+						opcode: "bodyDestroy",
+						blockType: Scratch.BlockType.COMMAND,
+						text: Scratch.translate(
+							"destroy body [BODY] and associated geometries"
+						),
+						arguments: {
+							BODY: {
 								type: Scratch.ArgumentType.STRING,
 								defaultValue: ""
 							}
@@ -491,6 +506,19 @@
 						)
 					},
 					{
+						opcode: "geomDestroy",
+						blockType: Scratch.BlockType.COMMAND,
+						text: Scratch.translate(
+							"destroy geometry [GEOM]"
+						),
+						arguments: {
+							GEOM: {
+								type: Scratch.ArgumentType.STRING,
+								defaultValue: ""
+							}
+						}
+					},
+					{
 						opcode: "geomAssociateBody",
 						blockType: Scratch.BlockType.COMMAND,
 						text: Scratch.translate(
@@ -609,7 +637,7 @@
 		}
 
 		resetAll() {
-			for(let i in worlds) this.destroyWorld({WORLD: i});
+			for(let i in worlds) this.worldDestroy({WORLD: i});
 			worlds = {};
 
 			dCloseODE();
@@ -630,7 +658,7 @@
 			return key;
 		}
 
-		destroyWorld(args) {
+		worldDestroy(args) {
 			const world = Scratch.Cast.toString(args.WORLD);
 
 			if(!worlds[world]) return;
@@ -644,7 +672,7 @@
 			delete worlds[world];
 		}
 
-		stepWorld(args) {
+		worldStep(args) {
 			const world = Scratch.Cast.toString(args.WORLD);
 			const sec = Scratch.Cast.toNumber(args.SECOND);
 
@@ -655,7 +683,7 @@
 			dJointGroupEmpty(worlds[world].contactGroup);
 		}
 
-		setWorldGravity(args) {
+		worldSetGravity(args) {
 			const world = Scratch.Cast.toString(args.WORLD);
 			const gravity = to_f32array(args.GRAVITY);
 
@@ -673,10 +701,27 @@
 			
 			bodies[key] = {
 				world: world,
-				body: dBodyCreate(worlds[world].world)
+				body: dBodyCreate(worlds[world].world),
+				geoms: []
 			};
 
 			return key;
+		}
+
+		bodyDestroy(args) {
+			const body = Scratch.Cast.toString(args.BODY);
+
+			if(!bodies[body]) return [];
+
+			dBodyDestroy(bodies[body].body);
+
+			for(let i of bodies[body].geoms){
+				dGeomDestroy(geoms[i].geom);
+
+				delete geoms[i];
+			}
+
+			delete bodies[body];
 		}
 
 		bodyGetPosition(args) {
@@ -842,6 +887,28 @@
 			return key;
 		}
 
+		geomDestroy(args) {
+			const geom = Scratch.Cast.toString(args.GEOM);
+
+			if(!geoms[geom]) return;
+
+			dGeomDestroy(geoms[geom].geom);
+
+			if(geoms[geom].body){
+				const body = geoms[geom].body;
+
+				if(bodies[body].geoms.length == 1){
+					this.bodyDestroy({BODY: body});
+				}else{
+					bodies[body].geoms.splice(bodies[body].geoms.indexOf(geom), 1);
+
+					dGeomDestroy(geoms[geom].geom);
+				}
+			}
+
+			delete geoms[geom];
+		}
+
 		geomAssociateBody(args) {
 			const geom = Scratch.Cast.toString(args.GEOM);
 			const body = Scratch.Cast.toString(args.BODY);
@@ -851,7 +918,9 @@
 			if(!bodies[body]) return "";
 
 			dGeomSetBody(geoms[geom].geom, bodies[body].body);
-			geoms[geom].body = bodies[body].body;
+			geoms[geom].body = body;
+
+			bodies[body].geoms.push(geom);
 
 			dBodyInitMass(bodies[body].body, mass);
 		}
