@@ -16,7 +16,7 @@
 	let dInitODE2, dCloseODE;
 	let dDoCollision, dWorldStep, dWorldCreate, dHashSpaceCreate, dWorldDestroy, dSpaceDestroy, dWorldSetGravity;
 	let dJointGroupCreate, dJointGroupDestroy, dJointGroupEmpty;
-	let dBodyCreate, dBodyDestroy, dBodyInitMass, dBodyGetPosition, dBodySetPosition, dBodyGetQuaternion, dBodySetQuaternion, dBodyAddForce, dBodyGetForce, dBodySetForce, dBodyGetLinearDamping, dBodyGetAngularDamping, dBodySetLinearDamping, dBodySetAngularDamping;
+	let dBodyCreate, dBodyDestroy, dBodyInitMass, dBodyGetPosition, dBodySetPosition, dBodyGetQuaternion, dBodySetQuaternion, dBodyAddForce, dBodyGetForce, dBodySetForce, dBodyGetLinearDamping, dBodyGetAngularDamping, dBodySetLinearDamping, dBodySetAngularDamping, dBodyIsKinematic, dBodySetKinematic, dBodySetDynamic;
 	let dCreateBox, dCreateCapsule, dCreateCylinder, dCreateSphere, dCreatePlane;
 	let dGeomDestroy, dGeomSetBody, dGeomGetPosition, dGeomSetPosition, dGeomGetQuaternion, dGeomSetQuaternion;
 	let ode;
@@ -83,6 +83,9 @@
 	dBodySetAngularDamping = Module.cwrap("dBodySetAngularDamping", null, ["number", "number"]);
 	dBodyGetLinearDamping = Module.cwrap("dBodyGetLinearDamping", "number", ["number"]);
 	dBodySetLinearDamping = Module.cwrap("dBodySetLinearDamping", null, ["number", "number"]);
+	dBodyIsKinematic = Module.cwrap("dBodyIsKinematic", "number", []);
+	dBodySetKinematic = Module.cwrap("dBodySetKinematic", null, ["number"]);
+	dBodySetDynamic = Module.cwrap("dBodySetDynamic", null, ["number"]);
 
 	dCreateBox = Module.cwrap("dCreateBox", "number", ["number", "number", "number", "number"]);
 	dCreateCapsule = Module.cwrap("dCreateCapsule", "number", ["number", "number", "number"]);
@@ -496,6 +499,46 @@
 							LINDAMP: {
 								type: Scratch.ArgumentType.NUMBER,
 								defaultValue: 0
+							}
+						}
+					},
+					{
+						opcode: "bodyIsKinematic",
+						blockType: Scratch.BlockType.BOOLEAN,
+						disableMonitor: true,
+						text: Scratch.translate(
+							"is [BODY] kinematic?"
+						),
+						arguments: {
+							BODY: {
+								type: Scratch.ArgumentType.STRING,
+								defaultValue: ""
+							}
+						}
+					},
+					{
+						opcode: "bodySetKinematic",
+						blockType: Scratch.BlockType.COMMAND,
+						text: Scratch.translate(
+							"set body [BODY] to kinematic"
+						),
+						arguments: {
+							BODY: {
+								type: Scratch.ArgumentType.STRING,
+								defaultValue: ""
+							}
+						}
+					},
+					{
+						opcode: "bodySetDynamic",
+						blockType: Scratch.BlockType.COMMAND,
+						text: Scratch.translate(
+							"set body [BODY] to dynamic"
+						),
+						arguments: {
+							BODY: {
+								type: Scratch.ArgumentType.STRING,
+								defaultValue: ""
 							}
 						}
 					},
@@ -958,7 +1001,7 @@
 			const body = Scratch.Cast.toString(args.BODY);
 			const angdamp = Scratch.Cast.toNumber(args.ANGDAMP);
 
-			if(!bodies[body]) return [];
+			if(!bodies[body]) return;
 
 			dBodySetAngularDamping(bodies[body].body, angdamp);
 		}
@@ -975,9 +1018,33 @@
 			const body = Scratch.Cast.toString(args.BODY);
 			const lindamp = Scratch.Cast.toNumber(args.LINDAMP);
 
-			if(!bodies[body]) return [];
+			if(!bodies[body]) return;
 
 			dBodySetLinearDamping(bodies[body].body, lindamp);
+		}
+
+		bodyIsKinematic(args) {
+			const body = Scratch.Cast.toString(args.BODY);
+
+			if(!bodies[body]) return false;
+
+			return Scratch.Cast.toBoolean(dBodyIsKinematic(bodies[body].body));
+		}
+
+		bodySetKinematic(args) {
+			const body = Scratch.Cast.toString(args.BODY);
+
+			if(!bodies[body]) return;
+
+			dBodySetKinematic(bodies[body].body);
+		}
+
+		bodySetDynamic(args) {
+			const body = Scratch.Cast.toString(args.BODY);
+
+			if(!bodies[body]) return;
+
+			dBodySetDynamic(bodies[body].body);
 		}
 
 		newGeomBox(args) {
@@ -985,7 +1052,7 @@
 			const world = Scratch.Cast.toString(args.WORLD);
 
 			if(!worlds[world] || sz.length != 3) return "";
-N
+
 			const key = new_obj_key(geoms);
 
 			geoms[key] = {
