@@ -1736,7 +1736,8 @@
 			joints[key] = {
 				joint: m(worlds[bodies[body1].world].world, 0),
 				world: bodies[body1].world,
-				bodies: [body1, body2]
+				bodies: [body1, body2],
+				type: m
 			};
 			
 			return key;
