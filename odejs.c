@@ -88,7 +88,7 @@ static void ray_callback(void* data, dGeomID geom1, dGeomID geom2){
 	}
 }
 
-void dRaycast(dSpaceID space, dReal sx, dReal sy, dReal sz, dReal ex, dReal ey, dReal ez){
+int dRaycast(dSpaceID space, dReal sx, dReal sy, dReal sz, dReal ex, dReal ey, dReal ez){
 	dVector3 start, end, dir;
 	dReal length, ilength;
 	dGeomID ray;
@@ -112,4 +112,62 @@ void dRaycast(dSpaceID space, dReal sx, dReal sy, dReal sz, dReal ex, dReal ey, 
 	dSpaceCollide2(ray, (dGeomID)space, hit, ray_callback);
 
 	dGeomDestroy(ray);
+
+	if(hit[3] != dInfinity){
+		return 1;
+	}
+
+	return 0;
+}
+
+struct ray_geom_data {
+	dVector4 hit;
+	dGeomID geom;
+};
+
+static void ray_callback_geom(void* data, dGeomID geom1, dGeomID geom2){
+	struct ray_geom_data* r = data;
+	dContact contacts[MAX_CONTACTS];
+	int count = dCollide(geom1, geom2, MAX_CONTACTS, &contacts[0].geom, sizeof(dContact));
+	int i;
+
+	for(i = 0; i < count; i++){
+		if((contacts[i].geom.g1 == r->geom || contacts[i].geom.g2 == r->geom) && contacts[i].geom.depth < r->hit[3]){
+			dCopyVector3(r->hit, contacts[i].geom.pos);
+			r->hit[3] = contacts[i].geom.depth;
+		}
+	}
+}
+
+int dRaycastGeom(dSpaceID space, dReal sx, dReal sy, dReal sz, dReal ex, dReal ey, dReal ez, dGeomID geom){
+	dVector3 start, end, dir;
+	dReal length, ilength;
+	dGeomID ray;
+	struct ray_geom_data r;
+
+	start[0] = sx, start[1] = sy, start[2] = sz;
+	end[0] = ex, end[1] = ey, end[2] = ez;
+
+	dSubtractVectors3(dir, end, start);
+
+	length = dCalcVectorLength3(dir);
+	ilength = dRecip(length);
+
+	dScaleVector3(dir, ilength);
+
+	ray = dCreateRay(0, length);
+	dGeomRaySet(ray, sx, sy, sz, dir[0], dir[1], dir[2]);
+
+	r.hit[3] = dInfinity;
+	r.geom = geom;
+
+	dSpaceCollide2(ray, (dGeomID)space, &r, ray_callback);
+
+	dGeomDestroy(ray);
+
+	if(r.hit[3] != dInfinity){
+		return 1;
+	}
+
+	return 0;
 }

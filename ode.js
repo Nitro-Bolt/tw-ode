@@ -14,7 +14,7 @@
 	}
 	let Module;
 	let dInitODE2, dCloseODE;
-	let dDoCollision, dWorldStep, dWorldCreate, dHashSpaceCreate, dWorldDestroy, dSpaceDestroy, dWorldSetGravity;
+	let dDoCollision, dWorldStep, dWorldCreate, dHashSpaceCreate, dWorldDestroy, dSpaceDestroy, dWorldSetGravity, dRaycast, dRaycastGeom;
 	let dJointGroupCreate, dJointGroupDestroy, dJointGroupEmpty;
 	let dBodyCreate, dBodyDestroy, dBodyInitMass, dBodyGetPosition, dBodySetPosition, dBodyGetQuaternion, dBodySetQuaternion, dBodyAddForce, dBodyGetForce, dBodySetForce, dBodyGetLinearDamping, dBodyGetAngularDamping, dBodySetLinearDamping, dBodySetAngularDamping, dBodyIsKinematic, dBodySetKinematic, dBodySetDynamic;
 	let dCreateBox, dCreateCapsule, dCreateCylinder, dCreateSphere, dCreatePlane;
@@ -64,6 +64,8 @@
 	dWorldDestroy = Module.cwrap("dWorldDestroy", null, ["number"]);
 	dSpaceDestroy = Module.cwrap("dSpaceDestroy", null, ["number"]);
 	dWorldSetGravity = Module.cwrap("dWorldSetGravity", null, ["number", "number", "number", "number"]);
+	dRaycast = Module.cwrap("dRaycast", "number", ["number", "number", "number", "number", "number", "number", "number"]);
+	dRaycastGeom = Module.cwrap("dRaycastGeom", "number", ["number", "number", "number", "number", "number", "number", "number", "number"]);
 	
 	dJointGroupCreate = Module.cwrap("dJointGroupCreate", "number", ["number"]);
 	dJointGroupDestroy = Module.cwrap("dJointGroupDestroy", null, ["number"]);
@@ -293,6 +295,52 @@
 							GRAVITY: {
 								type: arg_array,
 								defaultValue: from_array([0, -9.81, 0])
+							}
+						}
+					},
+					{
+						opcode: "worldIsRaycastTouching",
+						blockType: Scratch.BlockType.BOOLEAN,
+						text: Scratch.translate(
+							"is raycast from [START] to [END] in world [WORLD] touching any geometries"
+						),
+						arguments: {
+							WORLD: {
+								type: Scratch.ArgumentType.STRING,
+								defaultValue: ""
+							},
+							START: {
+								type: arg_array,
+								defaultValue: from_array([0, 0, 0])
+							},
+							END: {
+								type: arg_array,
+								defaultValue: from_array([0, 0, 0])
+							}
+						}
+					},
+					{
+						opcode: "worldIsRaycastTouchingGeom",
+						blockType: Scratch.BlockType.BOOLEAN,
+						text: Scratch.translate(
+							"is raycast from [START] to [END] in world [WORLD] touching geometry [GEOM]"
+						),
+						arguments: {
+							WORLD: {
+								type: Scratch.ArgumentType.STRING,
+								defaultValue: ""
+							},
+							START: {
+								type: arg_array,
+								defaultValue: from_array([0, 0, 0])
+							},
+							END: {
+								type: arg_array,
+								defaultValue: from_array([0, 0, 0])
+							},
+							GEOM: {
+								type: Scratch.ArgumentType.STRING,
+								defaultValue: ""
 							}
 						}
 					},
