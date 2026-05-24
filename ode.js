@@ -1767,6 +1767,9 @@
 				case dJointCreateHinge:
 					m = dJointGetHingeAnchor;
 					break;
+				case dJointCreateHinge2:
+					m = dJointGetHinge2Anchor;
+					break;
 				case dJointCreatePiston:
 					m = dJointGetPistonAnchor;
 					break;
@@ -1784,6 +1787,35 @@
 		}
 
 		jointSetPrimaryAnchor(args) {
+			const joint = Scratch.Cast.toString(args.JOINT);
+			const anchor = [...to_f32array(args.ANCHOR)];
+
+			if (!joints[joint] || anchor.length != 3) return;
+
+			let m;
+			switch (joints[joint].type) {
+				case dJointCreateBall:
+					m = dJointSetBallAnchor;
+					break;
+				case dJointCreateHinge:
+					m = dJointSetHingeAnchor;
+					break;
+				case dJointCreateHinge2:
+					m = dJointSetHinge2Anchor;
+					break;
+				case dJointCreatePiston:
+					m = dJointSetPistonAnchor;
+					break;
+				case dJointCreatePR:
+					m = dJointSetPRAnchor;
+					break;
+				case dJointCreatePU:
+					m = dJointSetPUAnchor;
+					break;
+			}
+			if (!m) return;
+
+			m(joints[joint].joint, anchor[0], anchor[1], anchor[2]);
 		}
 
 		jointGetSecondaryAnchor(args) {
@@ -1818,6 +1850,23 @@
 		}
 
 		jointSetSecondaryAnchor(args) {
+			const joint = Scratch.Cast.toString(args.JOINT);
+			const anchor = [...to_f32array(args.ANCHOR)];
+
+			if (!joints[joint] || anchor.length != 3) return;
+
+			let m;
+			switch (joints[joint].type) {
+				case dJointCreateHinge:
+					m = dJointSetHingeAnchor;
+					break;
+				case dJointCreateHinge2:
+					m = dJointSetHinge2Anchor;
+					break;
+			}
+			if (!m) return;
+
+			m(joints[joint].joint, anchor[0], anchor[1], anchor[2]);
 		}
 
 		jointGetPrimaryAxis(args) {
@@ -1864,6 +1913,38 @@
 		}
 
 		jointSetPrimaryAxis(args) {
+			const joint = Scratch.Cast.toString(args.JOINT);
+			const anchor = [...to_f32array(args.ANCHOR)];
+
+			if (!joints[joint] || anchor.length != 3) return;
+
+			let m;
+			switch (joints[joint].type) {
+				case dJointCreateHinge:
+					m = dJointSetHingeAxis;
+					break;
+				case dJointCreateAMotor:
+					m = dJointSetAMotorAxis;
+					break;
+				case dJointCreateLMotor:
+					m = dJointSetLMotorAxis;
+					break;
+				case dJointCreatePiston:
+					m = dJointSetPistonAxis;
+					break;
+				case dJointCreateSlider:
+					m = dJointSetSliderAxis;
+					break;
+				case dJointCreatePR:
+					m = dJointSetPRAxis1;
+					break;
+				case dJointCreatePU:
+					m = dJointSetPUAxis1;
+					break;
+			}
+			if (!m) return;
+
+			m(joints[joint].joint, anchor[0], anchor[1], anchor[2]);
 		}
 
 		jointGetSecondaryAxis(args) {
@@ -1898,6 +1979,38 @@
 		}
 
 		jointSetSecondaryAxis(args) {
+			const joint = Scratch.Cast.toString(args.JOINT);
+			const anchor = [...to_f32array(args.ANCHOR)];
+
+			if (!joints[joint] || anchor.length != 3) return;
+
+			let m;
+			switch (joints[joint].type) {
+				case dJointCreateHinge:
+					m = dJointSetAxis;
+					break;
+				case dJointCreateAMotor:
+					m = dJointSetAMotorAxis;
+					break;
+				case dJointCreateLMotor:
+					m = dJointSetLMotorAxis;
+					break;
+				case dJointCreatePiston:
+					m = dJointSetPistonAxis;
+					break;
+				case dJointCreateSlider:
+					m = dJointSetSliderAxis;
+					break;
+				case dJointCreatePR:
+					m = dJointSetPRAxis1;
+					break;
+				case dJointCreatePU:
+					m = dJointSetPUAxis1;
+					break;
+			}
+			if (!m) return;
+
+			m(joints[joint].joint, anchor[0], anchor[1], anchor[2]);
 		}
 
 		jointGetTertiaryAxis(args) {
