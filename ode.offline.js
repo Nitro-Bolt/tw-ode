@@ -2991,7 +2991,7 @@ embedded = true;
 						blockType: Scratch.BlockType.BOOLEAN,
 						disableMonitor: true,
 						text: Scratch.translate(
-							"is [BODY] kinematic?"
+							"is body [BODY] kinematic?"
 						),
 						arguments: {
 							BODY: {
