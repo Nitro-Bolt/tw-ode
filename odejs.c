@@ -73,3 +73,43 @@ void dBodyInitMass(dBodyID body, double mass) {
         dMassAdjust(&m, mass);
         dBodySetMass(body, &m);
 }
+
+static void ray_callback(void* data, dGeomID geom1, dGeomID geom2){
+	dReal* hit = data;
+	dContact contacts[MAX_CONTACTS];
+	int count = dCollide(geom1, geom2, MAX_CONTACTS, &contacts[0].geom, sizeof(dContact));
+	int i;
+
+	for(i = 0; i < count; i++){
+		if(contacts[i].geom.depth < hit[3]){
+			dCopyVector3(hit, contacts[i].geom.pos);
+			hit[3] = contacts[i].geom.depth;
+		}
+	}
+}
+
+void dRaycast(dSpaceID space, dReal sx, dReal sy, dReal sz, dReal ex, dReal ey, dReal ez){
+	dVector3 start, end, dir;
+	dReal length, ilength;
+	dGeomID ray;
+	dVector4 hit;
+
+	start[0] = sx, start[1] = sy, start[2] = sz;
+	end[0] = ex, end[1] = ey, end[2] = ez;
+
+	dSubtractVectors3(dir, end, start);
+
+	length = dCalcVectorLength3(dir);
+	ilength = dRecip(length);
+
+	dScaleVector3(dir, ilength);
+
+	ray = dCreateRay(0, length);
+	dGeomRaySet(ray, sx, sy, sz, dir[0], dir[1], dir[2]);
+
+	hit[3] = dInfinity;
+
+	dSpaceCollide2(ray, (dGeomID)space, hit, ray_callback);
+
+	dGeomDestroy(ray);
+}
