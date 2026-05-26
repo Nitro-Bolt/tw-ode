@@ -171,3 +171,49 @@ int dRaycastGeom(dSpaceID space, dReal sx, dReal sy, dReal sz, dReal ex, dReal e
 
 	return 0;
 }
+
+struct trimesh {
+	float* vertices;
+	unsigned int* indices;
+	dTriMeshDataID g;
+};
+
+dGeomID dCustomCreateTriMesh(dSpaceID space, dReal* vertex, int vertex_count, unsigned int* index, int index_count){
+	int i, j;
+	struct trimesh* t = malloc(sizeof(*t));
+	dGeomID g;
+
+	t->vertices = malloc(sizeof(*t->vertices) * vertex_count * 3);
+	t->indices = malloc(sizeof(*t->indices) * index_count);
+	t->g = dGeomTriMeshDataCreate();
+
+	for(i = 0; i < vertex_count; i++){
+		for(j = 0; j < 3; j++) t->vertices[i * 3 + j] = vertex[i * 3 + j];
+	}
+
+	for(i = 0; i < index_count; i++){
+		for(j = 0; j < 3; j++) t->indices[i * 3 + j] = index[i * 3 + j];
+	}
+
+	dGeomTriMeshDataBuildSingle(t->g,
+		t->vertices, 3 * sizeof(float), vertex_count,
+		t->indices, 3 * index_count, 3 * sizeof(int));
+
+	g = dCreateTriMesh(space, t->g, NULL, NULL, NULL);
+	dGeomSetData(g, t);
+
+	return g;
+}
+
+void dGeomCustomDestroy(dGeomID geom){
+	if(dGeomGetClass(geom) == dTriMeshClass){
+		struct trimesh* t = dGeomGetData(geom);
+
+		dGeomTriMeshDataDestroy(t->g);
+		free(t->vertices);
+		free(t->indices);
+		free(t);
+	}
+
+	dGeomDestroy(geom);
+}

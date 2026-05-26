@@ -17,8 +17,8 @@
 	let dDoCollision, dWorldStep, dWorldCreate, dHashSpaceCreate, dWorldDestroy, dSpaceDestroy, dWorldSetGravity, dRaycast, dRaycastGeom;
 	let dJointGroupCreate, dJointGroupDestroy, dJointGroupEmpty;
 	let dBodyCreate, dBodyDestroy, dBodyInitMass, dBodyGetPosition, dBodySetPosition, dBodyGetQuaternion, dBodySetQuaternion, dBodyAddForce, dBodyGetForce, dBodySetForce, dBodyGetLinearDamping, dBodyGetAngularDamping, dBodySetLinearDamping, dBodySetAngularDamping, dBodyIsKinematic, dBodySetKinematic, dBodySetDynamic;
-	let dCreateBox, dCreateCapsule, dCreateCylinder, dCreateSphere, dCreatePlane;
-	let dGeomDestroy, dGeomSetBody, dGeomGetPosition, dGeomSetPosition, dGeomGetQuaternion, dGeomSetQuaternion;
+	let dCreateBox, dCreateCapsule, dCreateCylinder, dCreateSphere, dCreatePlane, dCustomCreateTriMesh;
+	let dGeomCustomDestroy, dGeomSetBody, dGeomGetPosition, dGeomSetPosition, dGeomGetQuaternion, dGeomSetQuaternion;
 	let dJointCreateBall, dJointCreateDBall, dJointCreateDHinge, dJointCreateFixed, dJointCreateHinge, dJointCreateHinge2, dJointCreateLMotor, dJointCreatePiston, dJointCreatePlane2D, dJointCreatePR, dJointCreatePU, dJointCreateSlider, dJointCreateTransmission, dJointCreateUniversal, dJointDestroy;
 	let dJointAttach, dJointSetBallAnchor, dJointGetBallAnchor, dJointGetBallAnchor2, dJointSetHingeAnchor, dJointSetHingeAxis, dJointGetHingeAnchor, dJointGetHingeAnchor2, dJointGetHingeAxis, dJointGetHingeAngle, dJointSetSliderAxis, dJointGetSliderAxis, dJointSetUniversalAnchor, dJointSetUniversalAxis1, dJointSetUniversalAxis2, dJointGetUniversalAnchor, dJointGetUniversalAnchor2, dJointGetUniversalAxis1, dJointGetUniversalAxis2, dJointGetUniversalAngle1, dJointGetUniversalAngle2, dJointSetHinge2Anchor, dJointSetHinge2Axis1, dJointSetHinge2Axis2, dJointGetHinge2Anchor, dJointGetHinge2Anchor2, dJointGetHinge2Axis1, dJointGetHinge2Axis2, dJointGetHinge2Angle1, dJointSetPRAxis1, dJointGetPRAxis1, dJointSetPRAxis2, dJointGetPRAxis2, dJointSetPRAnchor, dJointGetPRAnchor, dJointSetPUAnchor, dJointGetPUAnchor, dJointSetPUAxis1, dJointGetPUAxis1, dJointSetPUAxis2, dJointGetPUAxis2, dJointSetPUAxis3, dJointGetPUAxis3, dJointGetPUAngle1, dJointGetPUAngle2, dJointSetPistonAnchor, dJointGetPistonAnchor, dJointGetPistonAnchor2, dJointSetPistonAxis, dJointGetPistonAxis, dJointGetPistonAngle, dJointAddPistonForce, dJointSetLMotorAxis, dJointGetLMotorAxis, dJointAddHingeTorque, dJointAddUniversalTorques, dJointAddSliderForce, dJointAddHinge2Torques, dJointGetTransmissionAnchor1, dJointGetDBallAnchor1, dJointGetDHingeAnchor1, dJointSetTransmissionAnchor1, dJointSetDBallAnchor1, dJointSetDHingeAnchor1, dJointGetTransmissionAnchor2, dJointGetDBallAnchor2, dJointGetDHingeAnchor2, dJointSetBallAnchor2, dJointSetTransmissionAnchor2, dJointSetDBallAnchor2, dJointSetDHingeAnchor2, dJointGetTransmissionAxis1, dJointGetDHingeAxis, dJointSetTransmissionAxis1, dJointSetDHingeAxis, dJointGetTransmissionAxis2, dJointSetTransmissionAxis2, dJointGetPRAngle, dJointGetTransmissionAngle1, dJointGetHingeAngle2, dJointGetTransmissionAngle2, dJointAddPRTorque, dJointAddPUTorques;
 	let ode;
@@ -97,8 +97,9 @@
 	dCreateCylinder = Module.cwrap("dCreateCylinder", "number", ["number", "number", "number"]);
 	dCreateSphere = Module.cwrap("dCreateSphere", "number", ["number", "number"]);
 	dCreatePlane = Module.cwrap("dCreatePlane", "number", ["number", "number", "number", "number", "number"]);
+	dCustomCreateTriMesh = Module.cwrap("dCustomCreateTriMesh", "number", ["number", "number", "number", "number", "number"]);
 
-	dGeomDestroy = Module.cwrap("dGeomDestroy", null, ["number"]);
+	dGeomCustomDestroy = Module.cwrap("dGeomCustomDestroy", null, ["number"]);
 	dGeomSetBody = Module.cwrap("dGeomSetBody", null, ["number", "number"]);
 	dGeomGetPosition = Module.cwrap("dGeomGetPosition", "number", ["number"]);
 	dGeomSetPosition = Module.cwrap("dGeomSetPosition", "number", ["number", "number", "number", "number"]);
@@ -228,6 +229,10 @@
 
 	function f64_view(ptr){
 		return new Float64Array(Module.HEAPF64.buffer, ptr);
+	}
+
+	function u32_view(ptr){
+		return new Uint32Array(Module.HEAPU32.buffer, ptr);
 	}
 
 	function quaternion_to_euler(q){
@@ -784,6 +789,28 @@
 						}
 					},
 					{
+						opcode: "newGeomTriMesh",
+						blockType: Scratch.BlockType.REPORTER,
+						disableMonitor: true,
+						text: Scratch.translate(
+							"new trimesh geometry with vertex list [VERTEX] and index list [INDEX] in world [WORLD]"
+						),
+						arguments: {
+							VERTEX: {
+								type: arg_array,
+								defaultValue: []
+							},
+							INDEX: {
+								type: arg_array,
+								defaultValue: []
+							},
+							WORLD: {
+								type: Scratch.ArgumentType.STRING,
+								defaultValue: ""
+							}
+						}
+					},
+					{
 						opcode: "geomDestroy",
 						blockType: Scratch.BlockType.COMMAND,
 						text: Scratch.translate(
@@ -1139,7 +1166,7 @@
 			dBodyDestroy(bodies[body].body);
 
 			for(let i of bodies[body].geoms){
-				dGeomDestroy(geoms[i].geom);
+				dGeomCustomDestroy(geoms[i].geom);
 
 				delete geoms[i];
 			}
@@ -1439,12 +1466,34 @@
 			return key;
 		}
 
+		newGeomTriMesh(args) {
+			const vertex = [...to_f32array(args.VERTEX)];
+			const index = [...to_f32array(args.INDEX)];
+			const world = Scratch.Cast.toString(args.WORLD);
+
+			if(!worlds[world] || (vertex.length % 3) != 0 || (index.length % 3) != 0 || index.length <= 0) return "";
+
+			const key = new_obj_key(geoms);
+			const v_ptr = Module._malloc(Module.HEAPF64.BYTES_PER_ELEMENT * vertex.length);
+			const i_ptr = Module._malloc(Module.HEAPU32.BYTES_PER_ELEMENT * index.length);
+
+			Module.HEAPF64.set(vertex, v_ptr / Module.HEAPF64.BYTES_PER_ELEMENT);
+			Module.HEAPU32.set(index, i_ptr / Module.HEAPU32.BYTES_PER_ELEMENT);
+
+			geoms[key] = {
+				world: world,
+				geom: dCustomCreateTriMesh(worlds[world].space, v_ptr, vertex.length / 3, i_ptr, index.length / 3)
+			};
+
+			return key;
+		}
+
 		geomDestroy(args) {
 			const geom = Scratch.Cast.toString(args.GEOM);
 
 			if(!geoms[geom]) return;
 
-			dGeomDestroy(geoms[geom].geom);
+			dGeomCustomDestroy(geoms[geom].geom);
 
 			if(geoms[geom].body){
 				const body = geoms[geom].body;

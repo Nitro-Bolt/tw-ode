@@ -45,6 +45,6 @@ You **MUST** move or rotate after associating the body with geometry, otherwise 
  - [x] Raycast
  - [x] Gravity function
  - [x] Mass stuffs
- - [ ] Trimesh
+ - [x] Trimesh
  - [ ] Heightfield
  - [ ] Convex? (Not well documented, so maybe not...)
