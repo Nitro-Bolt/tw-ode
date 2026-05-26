@@ -2378,7 +2378,7 @@ embedded = true;
 		ode = ODEWASM;
 	} else {
 		ode = await Scratch.external.evalAndReturn(
-			"https://raw.githubusercontent.com/Nitro-Bolt/tw-ode/89d2a02145b2a537c6bbd67d53346c1725c46ee2/odejs.js",
+			"https://raw.githubusercontent.com/Nitro-Bolt/tw-ode/d580df0057453d3d950c9b65c5672fbe4a160768/odejs.js",
 			"ODEWASM"
 		);
 	}
