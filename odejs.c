@@ -172,8 +172,14 @@ int dRaycastGeom(dSpaceID space, dReal sx, dReal sy, dReal sz, dReal ex, dReal e
 	return 0;
 }
 
+#ifdef dTRIMESH_GIMPACT
+typedef float dTrimeshVertex;
+#else
+typedef dReal dTrimeshVertex;
+#endif
+
 struct trimesh {
-	float* vertices;
+	dTrimeshVertex* vertices;
 	unsigned int* indices;
 	dTriMeshDataID g;
 };

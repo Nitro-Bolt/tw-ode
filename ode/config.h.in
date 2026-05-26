@@ -1,7 +1,7 @@
 #ifndef _ODE_CONFIG_H_
 #define _ODE_CONFIG_H_
 #define dTRIMESH_ENABLED 1
-#define dTRIMESH_GIMPACT 1
+#define dTRIMESH_@TRIMESH@ 1
 #define dOU_ENABLED 1
 #define dATOMICS_ENABLED 0
 #define dTLS_ENABLED 0

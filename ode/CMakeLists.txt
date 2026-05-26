@@ -7,15 +7,23 @@ endif()
 project(${ODE_TARGET})
 
 set(BASE ../../ode)
+set(TRIMESH OPCODE)
+
+if(TRIMESH STREQUAL "OPCODE")
+	set(TRIMESH_SRC ${BASE}/OPCODE/*.cpp ${BASE}/OPCODE/Ice/*.cpp)
+else()
+	set(TRIMESH_SRC ${BASE}/GIMPACT/src/*.cpp)
+endif()
 
 file(GLOB ODE_SRC
 	${BASE}/ode/src/*.c
 	${BASE}/ode/src/*.cpp
 	${BASE}/ode/src/joints/*.cpp
 	${BASE}/ou/src/ou/*.cpp
-	${BASE}/GIMPACT/src/*.cpp
+	${TRIMESH_SRC}
 	${BASE}/libccd/src/*.c
 )
+
 add_library(${ODE_TARGET} STATIC ${ODE_SRC})
 target_include_directories(${ODE_TARGET} PUBLIC
 	${BASE}/include
