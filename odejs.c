@@ -201,12 +201,36 @@ dGeomID dCustomCreateTriMesh(dSpaceID space, dReal* vertex, int vertex_count, un
 		for(j = 0; j < 3; j++) t->indices[i * 3 + j] = index[i * 3 + j];
 	}
 
-	dGeomTriMeshDataBuildDouble(t->g,
+#if defined(dTRIMESH_GIMPACT) || defined(dSINGLE)
+	dGeomTriMeshDataBuildSingle
+#else
+	dGeomTriMeshDataBuildDouble
+#endif
+		(t->g,
 		t->vertices, 3 * sizeof(*t->vertices), vertex_count,
 		t->indices, 3 * index_count, 3 * sizeof(int));
 
 	g = dCreateTriMesh(space, t->g, NULL, NULL, NULL);
 	dGeomSetData(g, t);
+
+	return g;
+}
+
+dGeomID dCustomCreateHeightfield(dSpaceID space, int placeable, dReal* samples, dReal width, dReal height, int s_width, int s_height, dReal scale, dReal offset, dReal thickness, int wrap){
+	dHeightfieldDataID d;
+	dGeomID g;
+
+	d = dGeomHeightfieldDataCreate();
+
+#ifdef dDOUBLE
+	dGeomHeightfieldDataBuildDouble
+#else
+	dGeomHeightfieldDataBuildSingle
+#endif
+	(d, samples, 1, width, height, s_width, s_height, scale, offset, thickness, wrap);
+
+	g = dCreateHeightfield(space, d, placeable);
+	dGeomSetData(g, d);
 
 	return g;
 }
@@ -219,6 +243,8 @@ void dGeomCustomDestroy(dGeomID geom){
 		free(t->vertices);
 		free(t->indices);
 		free(t);
+	}else if(dGeomGetClass(geom) == dHeightfieldClass){
+		dGeomHeightfieldDataDestroy(dGeomGetData(geom));
 	}
 
 	dGeomDestroy(geom);

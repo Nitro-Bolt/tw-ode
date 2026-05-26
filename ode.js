@@ -17,7 +17,7 @@
 	let dDoCollision, dWorldStep, dWorldCreate, dHashSpaceCreate, dWorldDestroy, dSpaceDestroy, dWorldSetGravity, dRaycast, dRaycastGeom;
 	let dJointGroupCreate, dJointGroupDestroy, dJointGroupEmpty;
 	let dBodyCreate, dBodyDestroy, dBodyInitMass, dBodyGetPosition, dBodySetPosition, dBodyGetQuaternion, dBodySetQuaternion, dBodyAddForce, dBodyGetForce, dBodySetForce, dBodyGetLinearDamping, dBodyGetAngularDamping, dBodySetLinearDamping, dBodySetAngularDamping, dBodyIsKinematic, dBodySetKinematic, dBodySetDynamic;
-	let dCreateBox, dCreateCapsule, dCreateCylinder, dCreateSphere, dCreatePlane, dCustomCreateTriMesh;
+	let dCreateBox, dCreateCapsule, dCreateCylinder, dCreateSphere, dCreatePlane, dCustomCreateTriMesh, dCustomCreateHeightfield;
 	let dGeomCustomDestroy, dGeomSetBody, dGeomGetPosition, dGeomSetPosition, dGeomGetQuaternion, dGeomSetQuaternion;
 	let dJointCreateBall, dJointCreateDBall, dJointCreateDHinge, dJointCreateFixed, dJointCreateHinge, dJointCreateHinge2, dJointCreateLMotor, dJointCreatePiston, dJointCreatePlane2D, dJointCreatePR, dJointCreatePU, dJointCreateSlider, dJointCreateTransmission, dJointCreateUniversal, dJointDestroy;
 	let dJointAttach, dJointSetBallAnchor, dJointGetBallAnchor, dJointGetBallAnchor2, dJointSetHingeAnchor, dJointSetHingeAxis, dJointGetHingeAnchor, dJointGetHingeAnchor2, dJointGetHingeAxis, dJointGetHingeAngle, dJointSetSliderAxis, dJointGetSliderAxis, dJointSetUniversalAnchor, dJointSetUniversalAxis1, dJointSetUniversalAxis2, dJointGetUniversalAnchor, dJointGetUniversalAnchor2, dJointGetUniversalAxis1, dJointGetUniversalAxis2, dJointGetUniversalAngle1, dJointGetUniversalAngle2, dJointSetHinge2Anchor, dJointSetHinge2Axis1, dJointSetHinge2Axis2, dJointGetHinge2Anchor, dJointGetHinge2Anchor2, dJointGetHinge2Axis1, dJointGetHinge2Axis2, dJointGetHinge2Angle1, dJointSetPRAxis1, dJointGetPRAxis1, dJointSetPRAxis2, dJointGetPRAxis2, dJointSetPRAnchor, dJointGetPRAnchor, dJointSetPUAnchor, dJointGetPUAnchor, dJointSetPUAxis1, dJointGetPUAxis1, dJointSetPUAxis2, dJointGetPUAxis2, dJointSetPUAxis3, dJointGetPUAxis3, dJointGetPUAngle1, dJointGetPUAngle2, dJointSetPistonAnchor, dJointGetPistonAnchor, dJointGetPistonAnchor2, dJointSetPistonAxis, dJointGetPistonAxis, dJointGetPistonAngle, dJointAddPistonForce, dJointSetLMotorAxis, dJointGetLMotorAxis, dJointAddHingeTorque, dJointAddUniversalTorques, dJointAddSliderForce, dJointAddHinge2Torques, dJointGetTransmissionAnchor1, dJointGetDBallAnchor1, dJointGetDHingeAnchor1, dJointSetTransmissionAnchor1, dJointSetDBallAnchor1, dJointSetDHingeAnchor1, dJointGetTransmissionAnchor2, dJointGetDBallAnchor2, dJointGetDHingeAnchor2, dJointSetBallAnchor2, dJointSetTransmissionAnchor2, dJointSetDBallAnchor2, dJointSetDHingeAnchor2, dJointGetTransmissionAxis1, dJointGetDHingeAxis, dJointSetTransmissionAxis1, dJointSetDHingeAxis, dJointGetTransmissionAxis2, dJointSetTransmissionAxis2, dJointGetPRAngle, dJointGetTransmissionAngle1, dJointGetHingeAngle2, dJointGetTransmissionAngle2, dJointAddPRTorque, dJointAddPUTorques;
@@ -98,6 +98,7 @@
 	dCreateSphere = Module.cwrap("dCreateSphere", "number", ["number", "number"]);
 	dCreatePlane = Module.cwrap("dCreatePlane", "number", ["number", "number", "number", "number", "number"]);
 	dCustomCreateTriMesh = Module.cwrap("dCustomCreateTriMesh", "number", ["number", "number", "number", "number", "number"]);
+	dCustomCreateHeightfield = Module.cwrap("dCustomCreateHeightfield", "number", ["number", "number", "number", "number", "number", "number", "number", "number", "number", "number", "number"]);
 
 	dGeomCustomDestroy = Module.cwrap("dGeomCustomDestroy", null, ["number"]);
 	dGeomSetBody = Module.cwrap("dGeomSetBody", null, ["number", "number"]);
@@ -382,6 +383,20 @@
 						items: [
 							"primary angle",
 							"secondary angle",
+						]
+					},
+					placeable: {
+						acceptReporters: false,
+						items: [
+							"placeable",
+							"non-placeable",
+						]
+					},
+					wrap: {
+						acceptReporters: false,
+						items: [
+							"wrapping",
+							"non-wrapping",
 						]
 					}
 				},
@@ -811,6 +826,62 @@
 						}
 					},
 					{
+						opcode: "newGeomHeightfield",
+						blockType: Scratch.BlockType.REPORTER,
+						disableMonitor: true,
+						text: Scratch.translate(
+							"new [PLACEABLE] [WRAP] heightfield geometry with data [DATA], width [WIDTH] with [WIDTH_SAMPLES] samples, height [HEIGHT] with [HEIGHT_SAMPLES] samples, scale [SCALE], offset [OFFSET], and thickness [THICKNESS] in world [WORLD]"
+						),
+						arguments: {
+							PLACEABLE: {
+								type: Scratch.ArgumentType.STRING,
+								defaultValue: "placeable",
+								menu: "placeable"
+	   						},
+							WRAP: {
+								type: Scratch.ArgumentType.STRING,
+								defaultValue: "wrapping",
+								menu: "wrap"
+	   						},
+							DATA: {
+								type: arg_array,
+								defaultValue: []
+							},
+							WIDTH: {
+								type: Scratch.ArgumentType.NUMBER,
+								defaultValue: 1
+							},
+							HEIGHT: {
+								type: Scratch.ArgumentType.NUMBER,
+								defaultValue: 1
+							},
+							WIDTH_SAMPLES: {
+								type: Scratch.ArgumentType.NUMBER,
+								defaultValue: 2
+							},
+							HEIGHT_SAMPLES: {
+								type: Scratch.ArgumentType.NUMBER,
+								defaultValue: 2
+							},
+							SCALE: {
+								type: Scratch.ArgumentType.NUMBER,
+								defaultValue: 1
+							},
+							OFFSET: {
+								type: Scratch.ArgumentType.NUMBER,
+								defaultValue: 0
+							},
+							THICKNESS: {
+								type: Scratch.ArgumentType.NUMBER,
+								defaultValue: 1
+							},
+							WORLD: {
+								type: Scratch.ArgumentType.STRING,
+								defaultValue: ""
+							}
+						}
+					},
+					{
 						opcode: "geomDestroy",
 						blockType: Scratch.BlockType.COMMAND,
 						text: Scratch.translate(
@@ -1059,7 +1130,7 @@
 								defaultValue: [0]
 							}
 						}
-					},
+					}
 				]
 			};
 		}
@@ -1484,6 +1555,39 @@
 				world: world,
 				geom: dCustomCreateTriMesh(worlds[world].space, v_ptr, vertex.length / 3, i_ptr, index.length / 3)
 			};
+
+			Module._free(i_ptr);
+			Module._free(v_ptr);
+
+			return key;
+		}
+
+		newGeomHeightfield(args) {
+			const data = [...to_f32array(args.DATA)];
+			const placeable = Scratch.Cast.toString(args.PLACEABLE);
+			const width = Scratch.Cast.toNumber(args.WIDTH);
+			const height = Scratch.Cast.toNumber(args.HEIGHT);
+			const s_width = Scratch.Cast.toNumber(args.WIDTH_SAMPLES);
+			const s_height = Scratch.Cast.toNumber(args.HEIGHT_SAMPLES);
+			const scale = Scratch.Cast.toNumber(args.SCALE);
+			const offset = Scratch.Cast.toNumber(args.OFFSET);
+			const thickness = Scratch.Cast.toNumber(args.THICKNESS);
+			const wrap = Scratch.Cast.toString(args.WRAP);
+			const world = Scratch.Cast.toString(args.WORLD);
+
+			if(!worlds[world] || data.length != (s_width * s_height) || s_width < 2 || s_height < 2) return "";
+
+			const key = new_obj_key(geoms);
+			const d_ptr = Module._malloc(Module.HEAPF64.BYTES_PER_ELEMENT * data.length);
+
+			Module.HEAPF64.set(data, d_ptr / Module.HEAPF64.BYTES_PER_ELEMENT);
+
+			geoms[key] = {
+				world: world,
+				geom: dCustomCreateHeightfield(worlds[world].space, placeable == "placeable", d_ptr, width, height, s_width, s_height, scale, offset, thickness, wrap == "wrapping")
+			};
+
+			Module._free(d_ptr);
 
 			return key;
 		}
